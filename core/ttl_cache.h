@@ -99,9 +99,10 @@ namespace ttl
 
 	public:
 		template <typename... Args>
-		bool GetCache(cache_base&cache, DataType edt, Args&&... args)
+		bool GetCache(cache_base& cache, DataType edt, Args&&... args)
 		{
-			typedef std::map<std::tuple<Args...>, std::weak_ptr<cache_base>> CacheMap;
+			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
+				, std::weak_ptr<cache_base>> CacheMap;
 
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
 			auto it1 = m_records.find(edt);
@@ -134,7 +135,8 @@ namespace ttl
 		template <typename... Args>
 		void SetCache(cache_base* cache, DataStoreType edst, DataType edt, time_t lifems, Args&&... args)
 		{
-			typedef std::map<std::tuple<Args...>, std::weak_ptr<cache_base>> CacheMap;
+			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
+				, std::weak_ptr<cache_base>> CacheMap;
 
 			std::shared_ptr<cache_base> shared(cache);
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
@@ -181,7 +183,8 @@ namespace ttl
 		template <typename... Args>
 		void ClrCache(DataType edt, Args&&... args)
 		{
-			typedef std::map<std::tuple<Args...>, std::weak_ptr<cache_base>> CacheMap;
+			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
+				, std::weak_ptr<cache_base>> CacheMap;
 
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
 			auto it = m_records.find(edt);
@@ -368,6 +371,11 @@ namespace ttl
 			dst->m_lifeMs = src->m_lifeMs;
 			return true;
 		}
+		template <typename... Args>
+		void _MangeTTL(Args&&... _args)
+		{
+			cache_mgr::Instance().SetCache(m_managed, m_Edst, m_Edt, m_lifeMs, std::forward<Args>(_args)...);
+		}
 
 	private:
 		template <typename... Args>
@@ -376,7 +384,7 @@ namespace ttl
 			m_managed = new cache<_Ty>;
 			m_managed->m_managed = m_managed;
 			_CopyCache(dynamic_cast<_Myt*>(m_managed), this);
-			cache_mgr::Instance().SetCache(m_managed, m_Edst, m_Edt, m_lifeMs, std::forward<Args>(_args)...);
+			_MangeTTL(std::forward<Args>(_args)...);
 		}
 
 		void StartTTL()
