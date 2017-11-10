@@ -1,0 +1,55 @@
+    针对使用“Args... arg”参数的函数，尤其是对同一个DataType缓存数据调用GetCache和SetCache时如果参数列表不一致，会导致编译器正常但是运行期出现内存错误的严重问题。
+    一种解决方案是使用模板的编译期分派，如对test_ttlcache.cpp例程中的三种数据类型的“GetCache”函数：
+
+	template <EmDataType dt>
+	struct by {};
+	
+	bool GetCache(by<DT_AccountInfo>, ttl::cache<AccountInfo>& _cache, const std::string& name, long id)
+	{
+		return ttl::cache_mgr::Instance().GetCache(_cache, DT_AccountInfo, name, id);
+	}
+	
+	bool GetCache(by<DT_AccountList>, ttl::cache<std::list<AccountInfo>>& _cache, const std::string& name)
+	{
+		return ttl::cache_mgr::Instance().GetCache(_cache, DT_AccountList, name);
+	}
+	
+	bool GetCache(by<DT_TradeHistory>, ttl::cache<TradeHistory>& _cache, long id)
+	{
+		return ttl::cache_mgr::Instance().GetCache(_cache, DT_TradeHistory, id);
+	}
+
+    使用这三个“GetCache”函数代替cache_mgr中的“GetCache”，可以在编译器暴露参数错误问题，使用方式为：
+
+	//使用
+	bool ret2 = GetCache(by<DT_AccountInfo>(), s2, "zxj"s, 100101);
+	//代替
+	bool ret2 = ttl::cache_mgr::Instance().GetCache(s2, DT_AccountInfo, "zxj"s, 100101);
+
+    但是目前“SetCache”函数并不对外暴露，唯一可能的修改是代码中对cache<_Ty>::_MangeTTL的调用，封装一个全局的函数:
+	
+	namespace ttl
+	{
+		template <typename _Ty, typename... Args>
+		void _ManageTTL(cache<_Ty>* _cache, Args&&... _args)
+		{
+			if(_cache)
+				_cache->_ManageTTL(std::forward<Args>(_args)...);
+		}
+	}
+	
+	并根据类型_Ty重载不同的全局_ManageTTL版本，如对test_ttlcache.cpp例程中的三种数据类型：
+	
+	namespace ttl
+	{
+		void _ManageTTL(cache<AccountInfo>* _cache, std::string name, int id)
+		{
+			if (_cache)
+				_cache->_ManageTTL(name, id);
+		}
+	}
+	......
+
+    但是因为c++模板编程的核心思想“SNIAF”，一样没有办法保证出现的参数错误在编译期发现，一旦参数写错，编译期发现无法匹配特化参数的“_ManageTTL”版本，则会调用Args&&...参数的版本，一样会出问题。
+    最根本的解决方案是需要调整现有的“SetCache”的调用方式，让用户有主动权，在按照上面封装针对不同类型的“GetCache”一样封装对应参数类型的“SetCache”。
+	

@@ -99,7 +99,7 @@ namespace ttl
 
 	public:
 		template <typename... Args>
-		bool GetCache(cache_base& cache, DataType edt, Args&&... args)
+		bool GetCache(cache_base& _cache, DataType edt, Args&&... args)
 		{
 			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
 				, std::weak_ptr<cache_base>> CacheMap;
@@ -117,7 +117,7 @@ namespace ttl
 						auto shared = it2->second.lock();
 						if (shared && shared.get())
 						{
-							cache = *(shared.get());
+							_cache = *(shared.get());
 							return true;
 						}
 						pmap->erase(it2);
@@ -133,12 +133,12 @@ namespace ttl
 		}
 
 		template <typename... Args>
-		void SetCache(cache_base* cache, DataStoreType edst, DataType edt, time_t lifems, Args&&... args)
+		void SetCache(cache_base* _cache, DataStoreType edst, DataType edt, time_t lifems, Args&&... args)
 		{
 			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
 				, std::weak_ptr<cache_base>> CacheMap;
 
-			std::shared_ptr<cache_base> shared(cache);
+			std::shared_ptr<cache_base> shared(_cache);
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
 			auto it = m_records.find(edt);
 			CacheMap* pmap = nullptr;
@@ -176,7 +176,7 @@ namespace ttl
 				if (shared)
 					m_caches.insert(std::make_pair(std::move(shared), lifems));
 				if (_CheckStrategy(TTL_WHEN_START))
-					_StartTTL(cache);
+					_StartTTL(_cache);
 			}
 		}
 
@@ -209,15 +209,15 @@ namespace ttl
 			}
 		}
 
-		void StartTTL(cache_base* cache)
+		void StartTTL(cache_base* _cache)
 		{
 			if (_CheckStrategy(TTL_WHEN_START))
 				return;
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
-			_StartTTL(cache);
+			_StartTTL(_cache);
 		}
 
-		void StopTTL(cache_base* cache) {/*donothing.*/ }
+		void StopTTL(cache_base* _cache) {/*donothing.*/ }
 
 	private:
 		void _ThreadLoop()
@@ -242,14 +242,14 @@ namespace ttl
 			}
 		}
 
-		void _StartTTL(cache_base* cache)
+		void _StartTTL(cache_base* _cache)
 		{
 			std::shared_ptr<cache_base> shared;
 			auto it = std::find_if(m_caches.begin()
 				, m_caches.end()
-				, [&shared, cache](std::pair<const std::shared_ptr<cache_base>, time_t>& pr)
+				, [&shared, _cache](std::pair<const std::shared_ptr<cache_base>, time_t>& pr)
 			{
-				if (pr.first.get() == cache)
+				if (pr.first.get() == _cache)
 				{
 					shared = pr.first;
 					return true;
@@ -321,7 +321,7 @@ namespace ttl
 			if (use_count() == 1)
 			{
 				assert(nullptr == m_managed);
-				MangeTTL(std::forward<Args>(_args)...);
+				ManageTTL(std::forward<Args>(_args)...);
 			}
 			else/* if (use_count() == 2)*/
 			{
@@ -372,19 +372,19 @@ namespace ttl
 			return true;
 		}
 		template <typename... Args>
-		void _MangeTTL(Args&&... _args)
+		void _ManageTTL(Args&&... _args)
 		{
 			cache_mgr::Instance().SetCache(m_managed, m_Edst, m_Edt, m_lifeMs, std::forward<Args>(_args)...);
 		}
 
 	private:
 		template <typename... Args>
-		void MangeTTL(Args&&... _args)
+		void ManageTTL(Args&&... _args)
 		{
 			m_managed = new cache<_Ty>;
 			m_managed->m_managed = m_managed;
 			_CopyCache(dynamic_cast<_Myt*>(m_managed), this);
-			_MangeTTL(std::forward<Args>(_args)...);
+			_ManageTTL(std::forward<Args>(_args)...);
 		}
 
 		void StartTTL()
