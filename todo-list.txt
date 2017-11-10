@@ -1,4 +1,5 @@
-    针对使用“Args... arg”参数的函数，尤其是对同一个DataType缓存数据调用GetCache和SetCache时如果参数列表不一致，会导致编译器正常但是运行期出现内存错误的严重问题。
+    针对使用“Args... arg”参数的函数，尤其是当对同一个DataType缓存数据调用GetCache和SetCache时如果参数列表不一致，会导致编
+译期正常但是运行期出现内存错误的严重问题。
     一种解决方案是使用模板的编译期分派，如对test_ttlcache.cpp例程中的三种数据类型的“GetCache”函数：
 
 	template <EmDataType dt>
@@ -19,7 +20,7 @@
 		return ttl::cache_mgr::Instance().GetCache(_cache, DT_TradeHistory, id);
 	}
 
-    使用这三个“GetCache”函数代替cache_mgr中的“GetCache”，可以在编译器暴露参数错误问题，使用方式为：
+    使用这三个“GetCache”函数代替cache_mgr中的“GetCache”，可以在编译期暴露参数错误问题，使用方式为：
 
 	//使用
 	bool ret2 = GetCache(by<DT_AccountInfo>(), s2, "zxj"s, 100101);
@@ -37,6 +38,13 @@
 				_cache->_ManageTTL(std::forward<Args>(_args)...);
 		}
 	}
+
+	将目前的成员函数“_ManageTTL”调用改为全局版本的调用：
+
+	//使用
+	::_ManageTTL(this, std::forward<Args>(_args)...);
+	//代替
+	_ManageTTL(std::forward<Args>(_args)...);
 	
 	并根据类型_Ty重载不同的全局_ManageTTL版本，如对test_ttlcache.cpp例程中的三种数据类型：
 	
@@ -50,6 +58,8 @@
 	}
 	......
 
-    但是因为c++模板编程的核心思想“SNIAF”，一样没有办法保证出现的参数错误在编译期发现，一旦参数写错，编译期发现无法匹配特化参数的“_ManageTTL”版本，则会调用Args&&...参数的版本，一样会出问题。
-    最根本的解决方案是需要调整现有的“SetCache”的调用方式，让用户有主动权，在按照上面封装针对不同类型的“GetCache”一样封装对应参数类型的“SetCache”。
+    但是因为c++模板编程的核心思想“SFINAE”，一样没有办法保证出现的参数错误在编译期发现，一旦参数写错，编译期发现无法匹配特化
+参数的“_ManageTTL”版本，则会调用Args&&...参数的版本，一样会出问题。
+    目前来看，最根本的解决方案是需要调整现有的“SetCache”的调用方式，让用户有调用的主动权，然后再按照前文所述封装针对不同类型
+的“GetCache”一样封装对应参数类型的“SetCache”。
 	
