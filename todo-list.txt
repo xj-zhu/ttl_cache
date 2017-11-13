@@ -43,7 +43,7 @@ SetCache函数失败，虽然可以通过判断返回值的方式在运行时发
 	将目前的成员函数“_ManageTTL”调用改为全局版本的调用：
 
 	//使用
-	::_ManageTTL(this, std::forward<Args>(_args)...);
+	ttl::_ManageTTL(this, std::forward<Args>(_args)...);
 	//代替
 	_ManageTTL(std::forward<Args>(_args)...);
 	

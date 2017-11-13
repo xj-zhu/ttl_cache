@@ -467,13 +467,13 @@ namespace ttl
 			_CheckInConstructor(std::forward<Args>(_args)...);
 		}
 
-		cache(nullptr_t) noexcept
+		cache(std::nullptr_t) noexcept
 		{	// construct empty cache
 		}
 
 		template<class _Dx,
 			typename... Args>
-			cache(nullptr_t _N, _Dx _Dt, DataStoreType _Edst, DataType _Edt, time_t _lifeMs, Args&&... _args)
+			cache(std::nullptr_t _N, _Dx _Dt, DataStoreType _Edst, DataType _Edt, time_t _lifeMs, Args&&... _args)
 			: m_shared(_N, _Dt)
 			, m_Edst(_Edst)
 			, m_Edt(_Edt)
@@ -485,7 +485,7 @@ namespace ttl
 		template<class _Dx,
 			class _Alloc,
 			typename... Args>
-			cache(nullptr_t _N, _Dx _Dt, _Alloc _Ax, DataStoreType _Edst, DataType _Edt, time_t _lifeMs, Args&&... _args)
+			cache(std::nullptr_t _N, _Dx _Dt, _Alloc _Ax, DataStoreType _Edst, DataType _Edt, time_t _lifeMs, Args&&... _args)
 			: m_shared(_N, _Dt, _Ax)
 			, m_Edst(_Edst)
 			, m_Edt(_Edt)
