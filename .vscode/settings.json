@@ -1,0 +1,15 @@
+{
+    "epitech-c-cpp-headers.headerType": "post2017",
+    "files.associations": {
+        "chrono": "cpp",
+        "iostream": "cpp",
+        "cstdio": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "functional": "cpp",
+        "utility": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "memory": "cpp"
+    }
+}
