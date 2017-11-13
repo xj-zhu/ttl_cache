@@ -11,6 +11,7 @@
 #include <map>
 #include <algorithm>
 #include <type_traits>
+#include <typeinfo>
 #include <assert.h>
 
 namespace ttl
@@ -38,11 +39,11 @@ namespace ttl
 
 	using namespace std::chrono;
 
-	enum DataStoreType	//Êý¾ÝÔÝ´æ·½Ê½
+	enum DataStoreType	//ï¿½ï¿½ï¿½ï¿½ï¿½Ý´æ·½Ê½
 	{
-		DS_Err,			//´íÎó
-		DS_SINGLE,		//µ¥Ìõ
-		DS_QUEUE,		//ÐòÁÐ
+		DS_Err,			//ï¿½ï¿½ï¿½ï¿½
+		DS_SINGLE,		//ï¿½ï¿½ï¿½ï¿½
+		DS_QUEUE,		//ï¿½ï¿½ï¿½ï¿½
 	};
 
 	typedef int DataType;
@@ -98,10 +99,10 @@ namespace ttl
 		static cache_mgr& Instance() { static cache_mgr inst; return inst; }
 
 	public:
-		template <typename... Args>
-		bool GetCache(cache_base& _cache, DataType edt, Args&&... args)
+		template <typename... Keys>
+		bool GetCache(cache_base& _cache, DataType edt, Keys&&... keys)
 		{
-			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
+			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Keys>>...>
 				, std::weak_ptr<cache_base>> CacheMap;
 
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
@@ -110,10 +111,10 @@ namespace ttl
 			{
 				auto& tp = it1->second;
 				CacheMap* pmap = (CacheMap*)(std::get<0>(tp));
-				// todo: auto& uniqe_func = std::get<2>(tp);
-				if (pmap/*todo: && uniqe_func()*/)
+				auto& uniqe_func = std::get<2>(tp);
+				if (pmap && uniqe_func && (*uniqe_func) && (*uniqe_func)(typeid(CacheMap)))
 				{
-					auto it2 = pmap->find(std::forward_as_tuple(std::forward<Args>(args)...));
+					auto it2 = pmap->find(std::forward_as_tuple(std::forward<Keys>(keys)...));
 					if (it2 != pmap->end())
 					{
 						auto shared = it2->second.lock();
@@ -134,10 +135,10 @@ namespace ttl
 			return false;
 		}
 
-		template <typename... Args>
-		bool SetCache(cache_base* _cache, DataStoreType edst, DataType edt, time_t lifems, Args&&... args)
+		template <typename... Keys>
+		bool SetCache(cache_base* _cache, DataStoreType edst, DataType edt, time_t lifems, Keys&&... keys)
 		{
-			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
+			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Keys>>...>
 				, std::weak_ptr<cache_base>> CacheMap;
 
 			std::shared_ptr<cache_base> shared(_cache);
@@ -148,8 +149,8 @@ namespace ttl
 			{
 				auto& tp = it->second;
 				pmap = (CacheMap*)(std::get<0>(tp));
-				// todo: auto& uniqe_func = std::get<2>(tp);
-				if (false/*todo: !uniqe_func()*/)
+				auto& uniqe_func = std::get<2>(tp);
+				if (!(uniqe_func && (*uniqe_func) && (*uniqe_func)(typeid(CacheMap))))
 					return false;
 			}
 			else
@@ -163,12 +164,22 @@ namespace ttl
 						delete ptypedmap;
 					}
 				};
-				std::function<void(void*)> *func_delter = new std::function<void(void*)>(deleter());
-				m_records[edt] = std::forward_as_tuple(pmap, std::unique_ptr<std::function<void(void*)>>(func_delter)/*,std::make_unique()*/);
+				std::function<void(void*)> *func_deleter = new std::function<void(void*)>(deleter());
+				struct checker
+				{
+					bool operator()(const std::type_info& info)
+					{
+						return typeid(CacheMap) == info;
+					}
+				};
+				std::function<bool(const std::type_info&)> *func_checker = new std::function<bool(const std::type_info&)>(checker());
+				m_records[edt] = std::forward_as_tuple(pmap
+					, std::unique_ptr<std::function<void(void*)>>(func_deleter)
+					, std::unique_ptr<std::function<bool(const std::type_info&)>>(func_checker));
 			}
 			if (pmap)
 			{
-				auto& ptr = (*pmap)[std::forward_as_tuple(std::forward<Args>(args)...)];
+				auto& ptr = (*pmap)[std::forward_as_tuple(std::forward<Keys>(keys)...)];
 				switch (edst)
 				{
 				default:
@@ -198,10 +209,10 @@ namespace ttl
 			return false;
 		}
 
-		template <typename... Args>
-		bool ClrCache(DataType edt, Args&&... args)
+		template <typename... Keys>
+		bool ClrCache(DataType edt, Keys&&... keys)
 		{
-			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
+			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Keys>>...>
 				, std::weak_ptr<cache_base>> CacheMap;
 
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
@@ -210,12 +221,12 @@ namespace ttl
 			{
 				auto& tp = it->second;
 				CacheMap* pmap = (CacheMap*)(std::get<0>(tp));
-				// todo: auto& uniqe_func = std::get<2>(tp);
-				if (false/*todo: !uniqe_func()*/)
+				auto& uniqe_func = std::get<2>(tp);
+				if (!(uniqe_func && (*uniqe_func) && (*uniqe_func)(typeid(CacheMap))))
 					return false;
 				if (pmap)
 				{
-					auto tp = std::forward_as_tuple(std::forward<Args>(args)...);
+					auto tp = std::forward_as_tuple(std::forward<Keys>(keys)...);
 					auto itf = pmap->find(tp);
 					if (itf != pmap->end())
 					{
@@ -304,7 +315,9 @@ namespace ttl
 
 		std::multimap<std::chrono::steady_clock::time_point, std::shared_ptr<cache_base>> m_queue;
 		std::map<std::shared_ptr<cache_base>, time_t> m_caches;
-		std::map<DataType, std::tuple<void*,std::unique_ptr<std::function<void(void*)>>>> m_records;
+		typedef std::tuple<void*, std::unique_ptr<std::function<void(void*)>>, std::unique_ptr<std::function<bool(const std::type_info&)>>> RecordTuple;
+		typedef std::map<DataType, RecordTuple> RecordsMap;
+		RecordsMap m_records;
 		std::recursive_mutex m_mutex;
 		std::condition_variable_any m_condvar;
 
@@ -323,8 +336,7 @@ namespace ttl
 			m_thread = nullptr;
 			std::for_each(m_records.begin()
 				, m_records.end()
-				, [](std::pair<const DataType, std::tuple<void*
-					, std::unique_ptr<std::function<void(void*)>>>>& pr)
+				, [](std::pair<const DataType, RecordTuple>& pr)
 			{
 				auto& tp = pr.second;
 				void* pmap = std::get<0>(tp);

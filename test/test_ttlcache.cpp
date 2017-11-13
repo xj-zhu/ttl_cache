@@ -190,7 +190,7 @@ void testttlcache_3()
 	t2->m_history.emplace_back(100000104, "突然多了这么多，银行系统bug了？");
 	t2->m_history.emplace_back(-100000000, "XX银行：sorry~，上一笔系清洁工手误。。");
 	ttl::cache<TradeHistory> c2(t2, ttl::DS_QUEUE, DT_TradeHistory, -1, 100101);
-	//3.2) 获取前面加入的缓存数据,应该有三条数据
+	//3.2) 获取前面加入的缓存数据,应该有四条数据
 	ttl::cache<TradeHistory> s3;
 	bool ret3 = ttl::cache_mgr::Instance().GetCache(s3, DT_TradeHistory, 100101);
 	//4. 清除前面加入的"100101账户"名下的缓存
