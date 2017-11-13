@@ -1,4 +1,4 @@
-#ifndef _TTL_CACHE_H_
+﻿#ifndef _TTL_CACHE_H_
 #define _TTL_CACHE_H_
 
 #include <memory>
@@ -39,11 +39,11 @@ namespace ttl
 
 	using namespace std::chrono;
 
-	enum DataStoreType	//�����ݴ淽ʽ
+	enum DataStoreType	//数据暂存方式
 	{
-		DS_Err,			//����
-		DS_SINGLE,		//����
-		DS_QUEUE,		//����
+		DS_Err,			//错误
+		DS_SINGLE,		//单条数据，更新即覆盖
+		DS_QUEUE,		//序列数据，更新即追加
 	};
 
 	typedef int DataType;

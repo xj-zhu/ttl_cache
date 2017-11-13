@@ -1,4 +1,4 @@
-#include "ttl_cache.h"
+ï»¿#include "ttl_cache.h"
 
 #include <iostream>
 #include <string>
@@ -6,9 +6,9 @@
 using namespace std::chrono;
 using namespace std::string_literals;
 
-enum EmDataType : ttl::DataType	//Êı¾İÀàĞÍ
+enum EmDataType : ttl::DataType	//æ•°æ®ç±»å‹
 {
-	DT_Err = ttl::DT_Err,	//´íÎó
+	DT_Err = ttl::DT_Err,	//é”™è¯¯
 	DT_AccountInfo,
 	DT_AccountList,
 	DT_TradeHistory,
@@ -53,7 +53,7 @@ public:
 	unsigned long m_balance;
 };
 
-//Ê¹ÓÃ³¡¾°ÏÂ£¬²»ĞèÒª±£³Öright²»±ä£¨const£©£¬so£¬Ê¹ÓÃ´ËÖÖĞ´·¨ĞÔÄÜ¸ü¸ß
+//ä½¿ç”¨åœºæ™¯ä¸‹ï¼Œä¸éœ€è¦ä¿æŒrightä¸å˜ï¼ˆconstï¼‰ï¼Œsoï¼Œä½¿ç”¨æ­¤ç§å†™æ³•æ€§èƒ½æ›´é«˜
 std::list<AccountInfo>& operator+=(std::list<AccountInfo>& left, std::list<AccountInfo>& right)
 {
 	for(auto it = right.begin(); it != right.end(); ++it)
@@ -95,45 +95,45 @@ public:
 
 public:
 	long m_account;
-	std::list<std::pair<long, std::string>> m_history;	//list<ÊÕÖ§½ğ¶î(+ÊÕÈë/-Ö§³ö)£¬½ğ¶î±ä¶¯ËµÃ÷>
+	std::list<std::pair<long, std::string>> m_history;	//list<æ”¶æ”¯é‡‘é¢(+æ”¶å…¥/-æ”¯å‡º)ï¼Œé‡‘é¢å˜åŠ¨è¯´æ˜>
 };
 
-void testttlcache_1()//µ¥ÌõÊı¾İ
+void testttlcache_1()//å•æ¡æ•°æ®
 {
-	//1. Ã»ÓĞ»º´æÊ±»ñÈ¡Ê§°Ü
+	//1. æ²¡æœ‰ç¼“å­˜æ—¶è·å–å¤±è´¥
 	ttl::cache<AccountInfo> s1;
-	//Ô¼¶¨ºóÁ½¸ö²ÎÊı±íÊ¾È¡¡¾³ÖÓĞÈËÎª"zxj"µÄÕËºÅÎª"100101"µÄÕË»§¡¿µÄ»º´æÊı¾İ
+	//çº¦å®šåä¸¤ä¸ªå‚æ•°è¡¨ç¤ºå–ã€æŒæœ‰äººä¸º"zxj"çš„è´¦å·ä¸º"100101"çš„è´¦æˆ·ã€‘çš„ç¼“å­˜æ•°æ®
 	bool ret1 = ttl::cache_mgr::Instance().GetCache(s1, DT_AccountInfo, "zxj"s, 100101);
-	//2.1) Ôö¼ÓÒ»¸öÉúÃüÖÜÆÚ10sµÄ»º´æÊı¾İ
+	//2.1) å¢åŠ ä¸€ä¸ªç”Ÿå‘½å‘¨æœŸ10sçš„ç¼“å­˜æ•°æ®
 	{
-		ttl::cache<AccountInfo> c1(new AccountInfo(100101, "zxj", "ÖĞ¹úÒøĞĞ", 666666), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101);
+		ttl::cache<AccountInfo> c1(new AccountInfo(100101, "zxj", "ä¸­å›½é“¶è¡Œ", 666666), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101);
 	}
-	//2.2) ¼´Ê±Àë¿ªÁËc1µÄ×÷ÓÃÓò£¬Ò»ÑùÄÜ¹»»ñÈ¡µ½Ç°Ãæ¼ÓÈëµÄ»º´æÊı¾İ£¬¡¾×¢Òâ£ººóÁ½¸ö²ÎÊıÀàĞÍÓëÔö¼Ó»º´æÊ±¶ÔÓ¦¡¿
+	//2.2) å³æ—¶ç¦»å¼€äº†c1çš„ä½œç”¨åŸŸï¼Œä¸€æ ·èƒ½å¤Ÿè·å–åˆ°å‰é¢åŠ å…¥çš„ç¼“å­˜æ•°æ®ï¼Œã€æ³¨æ„ï¼šåä¸¤ä¸ªå‚æ•°ç±»å‹ä¸å¢åŠ ç¼“å­˜æ—¶å¯¹åº”ã€‘
 	ttl::cache<AccountInfo> s2;
 	bool ret2 = ttl::cache_mgr::Instance().GetCache(s2, DT_AccountInfo, "zxj"s, 100101);
-	//3.1) ÎŞ·¨»ñÈ¡µ½Î´¼ÓÈëµÄ»º´æÊı¾İ£¬¡¾×¢Òâ£ººóÁ½¸ö²ÎÊıÀàĞÍÓëÔö¼Ó»º´æÊ±¶ÔÓ¦¡¿
+	//3.1) æ— æ³•è·å–åˆ°æœªåŠ å…¥çš„ç¼“å­˜æ•°æ®ï¼Œã€æ³¨æ„ï¼šåä¸¤ä¸ªå‚æ•°ç±»å‹ä¸å¢åŠ ç¼“å­˜æ—¶å¯¹åº”ã€‘
 	ttl::cache<AccountInfo> s3;
 	bool ret3 = ttl::cache_mgr::Instance().GetCache(s3, DT_AccountInfo, "lxy"s, 100102);
-	//3.2) Ôö¼ÓÒ»¸öÉúÃüÖÜÆÚ10sµÄ»º´æÊı¾İ
-	ttl::cache<AccountInfo> c2(new AccountInfo(100102, "lxy", "½¨ÉèÒøĞĞ", 654321), ttl::DS_SINGLE, DT_AccountInfo, 10000, "lxy"s, 100102);
-	//3.3) ÕâÊ±¿ÉÒÔ»ñÈ¡µ½£¨¶Ô±È3.1²½Öè£©
+	//3.2) å¢åŠ ä¸€ä¸ªç”Ÿå‘½å‘¨æœŸ10sçš„ç¼“å­˜æ•°æ®
+	ttl::cache<AccountInfo> c2(new AccountInfo(100102, "lxy", "å»ºè®¾é“¶è¡Œ", 654321), ttl::DS_SINGLE, DT_AccountInfo, 10000, "lxy"s, 100102);
+	//3.3) è¿™æ—¶å¯ä»¥è·å–åˆ°ï¼ˆå¯¹æ¯”3.1æ­¥éª¤ï¼‰
 	ttl::cache<AccountInfo> s4;
 	bool ret4 = ttl::cache_mgr::Instance().GetCache(s4, DT_AccountInfo, "lxy"s, 100102);
-	//4.1) ĞŞ¸ÄÁË»º´æÖĞµÄÕË»§Óà¶î
-	ttl::cache<AccountInfo> c3(new AccountInfo(100101, "zxj", "ÖĞ¹úÒøĞĞ", 999999), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101);
-	//4.2) ÖØĞÂ»ñÈ¡»º´æÊı¾İ£¬µÃµ½×îĞÂÊı¾İ
+	//4.1) ä¿®æ”¹äº†ç¼“å­˜ä¸­çš„è´¦æˆ·ä½™é¢
+	ttl::cache<AccountInfo> c3(new AccountInfo(100101, "zxj", "ä¸­å›½é“¶è¡Œ", 999999), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101);
+	//4.2) é‡æ–°è·å–ç¼“å­˜æ•°æ®ï¼Œå¾—åˆ°æœ€æ–°æ•°æ®
 	ttl::cache<AccountInfo> s5;
 	bool ret5 = ttl::cache_mgr::Instance().GetCache(s5, DT_AccountInfo, "zxj"s, 100101);
-	//5.1) Çå³ı¡¾³ÖÓĞÈËÎª"zxj"µÄÕËºÅÎª"100101"µÄÕË»§¡¿µÄ»º´æÊı¾İ
+	//5.1) æ¸…é™¤ã€æŒæœ‰äººä¸º"zxj"çš„è´¦å·ä¸º"100101"çš„è´¦æˆ·ã€‘çš„ç¼“å­˜æ•°æ®
 	ttl::cache_mgr::Instance().ClrCache(DT_AccountInfo, "zxj"s, 100101);
-	//5.2) »ñÈ¡²»µ½¶ÔÓ¦µÄ»º´æÁË
+	//5.2) è·å–ä¸åˆ°å¯¹åº”çš„ç¼“å­˜äº†
 	ttl::cache<AccountInfo> s6;
 	bool ret6 = ttl::cache_mgr::Instance().GetCache(s6, DT_AccountInfo, "zxj"s, 100101);
-	//6. Ê¹ÓÃºÍ×î¿ªÊ¼µ÷ÓÃ²»Í¬µÄkeys²ÎÊı´´½¨ĞÂ»º´æ£¬»áµ¼ÖÂÄÚ´æ»ìÂÒ£¬»òÖÂ±ÀÀ£
-	ttl::cache<AccountInfo> c4(new AccountInfo(100101, "zxj", "ÖĞ¹úÒøĞĞ", 888888), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101,"ÖĞ¹úÒøĞĞ"s);
+	//6. ä½¿ç”¨å’Œæœ€å¼€å§‹è°ƒç”¨ä¸åŒçš„keyså‚æ•°åˆ›å»ºæ–°ç¼“å­˜ï¼Œä¼šå¯¼è‡´å†…å­˜æ··ä¹±ï¼Œæˆ–è‡´å´©æºƒ
+	ttl::cache<AccountInfo> c4(new AccountInfo(100101, "zxj", "ä¸­å›½é“¶è¡Œ", 888888), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101,"ä¸­å›½é“¶è¡Œ"s);
 	ttl::cache<AccountInfo> s7;
-	bool ret7 = ttl::cache_mgr::Instance().GetCache(s7, DT_AccountInfo, "zxj"s, 100101, "ÖĞ¹úÒøĞĞ"s);
-	//7. µÈµ½»º´æÉúÃüÖÜÆÚ½áÊø£¬Ôò²»ÄÜÔÙ»ñÈ¡µ½»º´æÊı¾İ¡¾×¢Òâ£º¾ßÌåÄÜ²»ÄÜ»ñÈ¡µ½ºÍttl::ttl_cache_mgrµÄ»º´æ²ßÂÔ"ttl::ttl_cache_mgr::TtlStrategy"ÓĞ¹Ø¡¿
+	bool ret7 = ttl::cache_mgr::Instance().GetCache(s7, DT_AccountInfo, "zxj"s, 100101, "ä¸­å›½é“¶è¡Œ"s);
+	//7. ç­‰åˆ°ç¼“å­˜ç”Ÿå‘½å‘¨æœŸç»“æŸï¼Œåˆ™ä¸èƒ½å†è·å–åˆ°ç¼“å­˜æ•°æ®ã€æ³¨æ„ï¼šå…·ä½“èƒ½ä¸èƒ½è·å–åˆ°å’Œttl::ttl_cache_mgrçš„ç¼“å­˜ç­–ç•¥"ttl::ttl_cache_mgr::TtlStrategy"æœ‰å…³ã€‘
 	std::this_thread::sleep_for(std::chrono::seconds(10));
 	ttl::cache<AccountInfo> s8;
 	bool ret8 = ttl::cache_mgr::Instance().GetCache(s8, DT_AccountInfo, "lxy"s, 100102);
@@ -141,65 +141,65 @@ void testttlcache_1()//µ¥ÌõÊı¾İ
 
 void testttlcache_2()
 {
-	//1. Ã»ÓĞ»º´æÊ±»ñÈ¡Ê§°Ü
+	//1. æ²¡æœ‰ç¼“å­˜æ—¶è·å–å¤±è´¥
 	ttl::cache<std::list<AccountInfo>> s1;
-	// keysÖ»ÓĞÒ»¸ö²ÎÊı£¬±íÊ¾»ñÈ¡¡¾³ÖÓĞÈËÎª"zxj"µÄÕË»§ÁĞ±í¡¿»º´æÊı¾İ
+	// keysåªæœ‰ä¸€ä¸ªå‚æ•°ï¼Œè¡¨ç¤ºè·å–ã€æŒæœ‰äººä¸º"zxj"çš„è´¦æˆ·åˆ—è¡¨ã€‘ç¼“å­˜æ•°æ®
 	bool ret1 = ttl::cache_mgr::Instance().GetCache(s1, DT_AccountList,"zxj"s);
-	//2.1) Ôö¼ÓÒ»¸ö»º´æÊı¾İ,ĞòÁĞÊı¾İÉæ¼°µ½ÊµÊ±¸üĞÂ£¬±ÈÈç¶©ÔÄÍÆËÍÊı¾İ£¬¿ÉÖ¸¶¨ÉúÃüÖÜÆÚÎªÎŞÏŞ³¤(time_t(-1))
+	//2.1) å¢åŠ ä¸€ä¸ªç¼“å­˜æ•°æ®,åºåˆ—æ•°æ®æ¶‰åŠåˆ°å®æ—¶æ›´æ–°ï¼Œæ¯”å¦‚è®¢é˜…æ¨é€æ•°æ®ï¼Œå¯æŒ‡å®šç”Ÿå‘½å‘¨æœŸä¸ºæ— é™é•¿(time_t(-1))
 	auto l1 = new std::list<AccountInfo>;
-	l1->emplace_back(100103, "zxj", "½»Í¨ÒøĞĞ", 900000);
+	l1->emplace_back(100103, "zxj", "äº¤é€šé“¶è¡Œ", 900000);
 	ttl::cache<std::list<AccountInfo>> c1(l1, ttl::DS_QUEUE, DT_AccountList, -1, "zxj"s);
-	//2.2) »ñÈ¡Ç°Ãæ¼ÓÈëµÄ»º´æÊı¾İ
+	//2.2) è·å–å‰é¢åŠ å…¥çš„ç¼“å­˜æ•°æ®
 	ttl::cache<std::list<AccountInfo>> s2;
 	bool ret2 = ttl::cache_mgr::Instance().GetCache(s2, DT_AccountList, "zxj"s);
-	//3.1) Ôö¼ÓÁ½¸ö»º´æÊı¾İÏî
+	//3.1) å¢åŠ ä¸¤ä¸ªç¼“å­˜æ•°æ®é¡¹
 	auto l2 = new std::list<AccountInfo>;
-	l2->emplace_back(100104, "zxj", "Å©ÒµÒøĞĞ", 980000);
-	l2->emplace_back(100105, "zxj", "¹¤ÉÌÒøĞĞ", 990000);
+	l2->emplace_back(100104, "zxj", "å†œä¸šé“¶è¡Œ", 980000);
+	l2->emplace_back(100105, "zxj", "å·¥å•†é“¶è¡Œ", 990000);
 	ttl::cache<std::list<AccountInfo>> c2(l2, ttl::DS_QUEUE, DT_AccountList, -1, "zxj"s);
-	//3.2) »ñÈ¡Ç°Ãæ¼ÓÈëµÄ»º´æÊı¾İ,Ó¦¸ÃÓĞÈıÌõÊı¾İ
+	//3.2) è·å–å‰é¢åŠ å…¥çš„ç¼“å­˜æ•°æ®,åº”è¯¥æœ‰ä¸‰æ¡æ•°æ®
 	ttl::cache<std::list<AccountInfo>> s3;
 	bool ret3 = ttl::cache_mgr::Instance().GetCache(s3, DT_AccountList, "zxj"s);
-	//4. Çå³ıÇ°Ãæ¼ÓÈëµÄ"zxj"ÃûÏÂµÄ»º´æ
+	//4. æ¸…é™¤å‰é¢åŠ å…¥çš„"zxj"åä¸‹çš„ç¼“å­˜
 	ttl::cache_mgr::Instance().ClrCache(DT_AccountList,"zxj"s);
-	//5.1) Ôö¼ÓÒ»¸öĞÂµÄ»º´æÊı¾İÏî
+	//5.1) å¢åŠ ä¸€ä¸ªæ–°çš„ç¼“å­˜æ•°æ®é¡¹
 	auto l3 = new std::list<AccountInfo>;
-	l3->emplace_back(100106, "zxj", "ÕĞÉÌÒøĞĞ", 970000);
+	l3->emplace_back(100106, "zxj", "æ‹›å•†é“¶è¡Œ", 970000);
 	ttl::cache<std::list<AccountInfo>> c3(l3, ttl::DS_QUEUE, DT_AccountList, -1, "zxj"s);
-	//2.2) »ñÈ¡Ç°Ãæ¼ÓÈëµÄ»º´æÊı¾İ,Ó¦¸ÃÖ»ÓĞÒ»ÌõÊı¾İ
+	//2.2) è·å–å‰é¢åŠ å…¥çš„ç¼“å­˜æ•°æ®,åº”è¯¥åªæœ‰ä¸€æ¡æ•°æ®
 	ttl::cache<std::list<AccountInfo>> s4;
 	bool ret4 = ttl::cache_mgr::Instance().GetCache(s4, DT_AccountList, "zxj"s);
 }
 
 void testttlcache_3()
 {
-	//1. Ã»ÓĞ»º´æÊ±»ñÈ¡Ê§°Ü
+	//1. æ²¡æœ‰ç¼“å­˜æ—¶è·å–å¤±è´¥
 	ttl::cache<TradeHistory> s1;
-	// keysÖ»ÓĞÒ»¸ö²ÎÊı£¬±íÊ¾»ñÈ¡¡¾ÕËºÅÎª"100101"µÄÕË»§µÄ½»Ò×Ã÷Ï¸¡¿»º´æÊı¾İ
+	// keysåªæœ‰ä¸€ä¸ªå‚æ•°ï¼Œè¡¨ç¤ºè·å–ã€è´¦å·ä¸º"100101"çš„è´¦æˆ·çš„äº¤æ˜“æ˜ç»†ã€‘ç¼“å­˜æ•°æ®
 	bool ret1 = ttl::cache_mgr::Instance().GetCache(s1, DT_TradeHistory, 100101);
-	//2.1) Ôö¼ÓÒ»¸ö»º´æÊı¾İ,ĞòÁĞÊı¾İÉæ¼°µ½ÊµÊ±¸üĞÂ£¬±ÈÈç¶©ÔÄÍÆËÍÊı¾İ£¬¿ÉÖ¸¶¨ÉúÃüÖÜÆÚÎªÎŞÏŞ³¤(time_t(-1))
+	//2.1) å¢åŠ ä¸€ä¸ªç¼“å­˜æ•°æ®,åºåˆ—æ•°æ®æ¶‰åŠåˆ°å®æ—¶æ›´æ–°ï¼Œæ¯”å¦‚è®¢é˜…æ¨é€æ•°æ®ï¼Œå¯æŒ‡å®šç”Ÿå‘½å‘¨æœŸä¸ºæ— é™é•¿(time_t(-1))
 	auto t1 = new TradeHistory(100101);
-	t1->m_history.emplace_back(6666, "·¢¹¤×ÊÀ²");
-	t1->m_history.emplace_back(-1000, "Â¥ÏÂ×ãÁÆµêÒ»ÖÀÇ§½ğ");
+	t1->m_history.emplace_back(6666, "å‘å·¥èµ„å•¦");
+	t1->m_history.emplace_back(-1000, "æ¥¼ä¸‹è¶³ç–—åº—ä¸€æ·åƒé‡‘");
 	ttl::cache<TradeHistory> c1(t1, ttl::DS_QUEUE, DT_TradeHistory, -1, 100101);
-	//2.2) »ñÈ¡Ç°Ãæ¼ÓÈëµÄ»º´æÊı¾İ
+	//2.2) è·å–å‰é¢åŠ å…¥çš„ç¼“å­˜æ•°æ®
 	ttl::cache<TradeHistory> s2;
 	bool ret2 = ttl::cache_mgr::Instance().GetCache(s2, DT_TradeHistory, 100101);
-	//3.1) Ôö¼ÓÁ½¸ö»º´æÊı¾İÏî
+	//3.1) å¢åŠ ä¸¤ä¸ªç¼“å­˜æ•°æ®é¡¹
 	auto t2 = new TradeHistory(100101);
-	t2->m_history.emplace_back(100000104, "Í»È»¶àÁËÕâÃ´¶à£¬ÒøĞĞÏµÍ³bugÁË£¿");
-	t2->m_history.emplace_back(-100000000, "XXÒøĞĞ£ºsorry~£¬ÉÏÒ»±ÊÏµÇå½à¹¤ÊÖÎó¡£¡£");
+	t2->m_history.emplace_back(100000104, "çªç„¶å¤šäº†è¿™ä¹ˆå¤šï¼Œé“¶è¡Œç³»ç»Ÿbugäº†ï¼Ÿ");
+	t2->m_history.emplace_back(-100000000, "XXé“¶è¡Œï¼šsorry~ï¼Œä¸Šä¸€ç¬”ç³»æ¸…æ´å·¥æ‰‹è¯¯ã€‚ã€‚");
 	ttl::cache<TradeHistory> c2(t2, ttl::DS_QUEUE, DT_TradeHistory, -1, 100101);
-	//3.2) »ñÈ¡Ç°Ãæ¼ÓÈëµÄ»º´æÊı¾İ,Ó¦¸ÃÓĞËÄÌõÊı¾İ
+	//3.2) è·å–å‰é¢åŠ å…¥çš„ç¼“å­˜æ•°æ®,åº”è¯¥æœ‰å››æ¡æ•°æ®
 	ttl::cache<TradeHistory> s3;
 	bool ret3 = ttl::cache_mgr::Instance().GetCache(s3, DT_TradeHistory, 100101);
-	//4. Çå³ıÇ°Ãæ¼ÓÈëµÄ"100101ÕË»§"ÃûÏÂµÄ»º´æ
+	//4. æ¸…é™¤å‰é¢åŠ å…¥çš„"100101è´¦æˆ·"åä¸‹çš„ç¼“å­˜
 	ttl::cache_mgr::Instance().ClrCache(DT_TradeHistory, 100101);
-	//5.1) Ôö¼ÓÒ»¸öĞÂµÄ»º´æÊı¾İÏî
+	//5.1) å¢åŠ ä¸€ä¸ªæ–°çš„ç¼“å­˜æ•°æ®é¡¹
 	auto t3 = new TradeHistory(100101);
-	t3->m_history.emplace_back(-1314520, "emmm,¹â¹÷½Ú·¢ºì°üÖ§³ö");
+	t3->m_history.emplace_back(-1314520, "emmm,å…‰æ£èŠ‚å‘çº¢åŒ…æ”¯å‡º");
 	ttl::cache<TradeHistory> c3(t3, ttl::DS_QUEUE, DT_TradeHistory, -1, 100101);
-	//2.2) »ñÈ¡Ç°Ãæ¼ÓÈëµÄ»º´æÊı¾İ,Ó¦¸ÃÖ»ÓĞÒ»ÌõÊı¾İ
+	//2.2) è·å–å‰é¢åŠ å…¥çš„ç¼“å­˜æ•°æ®,åº”è¯¥åªæœ‰ä¸€æ¡æ•°æ®
 	ttl::cache<TradeHistory> s4;
 	bool ret4 = ttl::cache_mgr::Instance().GetCache(s4, DT_TradeHistory, 100101);
 }
