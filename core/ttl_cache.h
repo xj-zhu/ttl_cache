@@ -108,8 +108,10 @@ namespace ttl
 			auto it1 = m_records.find(edt);
 			if (it1 != m_records.end())
 			{
-				CacheMap* pmap = (CacheMap*)(it1->second);
-				if (pmap)
+				auto& tp = it1->second;
+				CacheMap* pmap = (CacheMap*)(std::get<0>(tp));
+				// todo: auto& uniqe_func = std::get<2>(tp);
+				if (pmap/*todo: && uniqe_func()*/)
 				{
 					auto it2 = pmap->find(std::forward_as_tuple(std::forward<Args>(args)...));
 					if (it2 != pmap->end())
@@ -133,7 +135,7 @@ namespace ttl
 		}
 
 		template <typename... Args>
-		void SetCache(cache_base* _cache, DataStoreType edst, DataType edt, time_t lifems, Args&&... args)
+		bool SetCache(cache_base* _cache, DataStoreType edst, DataType edt, time_t lifems, Args&&... args)
 		{
 			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
 				, std::weak_ptr<cache_base>> CacheMap;
@@ -142,14 +144,27 @@ namespace ttl
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
 			auto it = m_records.find(edt);
 			CacheMap* pmap = nullptr;
-			if (it != m_records.end() && it->second)
+			if (it != m_records.end())
 			{
-				pmap = (CacheMap*)(it->second);
+				auto& tp = it->second;
+				pmap = (CacheMap*)(std::get<0>(tp));
+				// todo: auto& uniqe_func = std::get<2>(tp);
+				if (false/*todo: !uniqe_func()*/)
+					return false;
 			}
 			else
 			{
 				pmap = new CacheMap;
-				m_records[edt] = pmap;
+				struct deleter
+				{
+					void operator()(void* pmap)
+					{
+						CacheMap* ptypedmap = (CacheMap*)pmap;
+						delete ptypedmap;
+					}
+				};
+				std::function<void(void*)> *func_delter = new std::function<void(void*)>(deleter());
+				m_records[edt] = std::forward_as_tuple(pmap, std::unique_ptr<std::function<void(void*)>>(func_delter)/*,std::make_unique()*/);
 			}
 			if (pmap)
 			{
@@ -158,6 +173,7 @@ namespace ttl
 				{
 				default:
 					assert(false);
+					return false;
 					break;
 				case DS_QUEUE:
 					if (ptr.expired())
@@ -177,20 +193,26 @@ namespace ttl
 					m_caches.insert(std::make_pair(std::move(shared), lifems));
 				if (_CheckStrategy(TTL_WHEN_START))
 					_StartTTL(_cache);
+				return true;
 			}
+			return false;
 		}
 
 		template <typename... Args>
-		void ClrCache(DataType edt, Args&&... args)
+		bool ClrCache(DataType edt, Args&&... args)
 		{
 			typedef std::map<std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
 				, std::weak_ptr<cache_base>> CacheMap;
 
 			std::lock_guard<std::recursive_mutex> l(m_mutex);
 			auto it = m_records.find(edt);
-			if (it != m_records.end() && it->second)
+			if (it != m_records.end())
 			{
-				CacheMap* pmap = (CacheMap*)(it->second);
+				auto& tp = it->second;
+				CacheMap* pmap = (CacheMap*)(std::get<0>(tp));
+				// todo: auto& uniqe_func = std::get<2>(tp);
+				if (false/*todo: !uniqe_func()*/)
+					return false;
 				if (pmap)
 				{
 					auto tp = std::forward_as_tuple(std::forward<Args>(args)...);
@@ -207,6 +229,7 @@ namespace ttl
 					}
 				}
 			}
+			return true;
 		}
 
 		void StartTTL(cache_base* _cache)
@@ -281,7 +304,7 @@ namespace ttl
 
 		std::multimap<std::chrono::steady_clock::time_point, std::shared_ptr<cache_base>> m_queue;
 		std::map<std::shared_ptr<cache_base>, time_t> m_caches;
-		std::map<DataType, void*> m_records;
+		std::map<DataType, std::tuple<void*,std::unique_ptr<std::function<void(void*)>>>> m_records;
 		std::recursive_mutex m_mutex;
 		std::condition_variable_any m_condvar;
 
@@ -300,8 +323,15 @@ namespace ttl
 			m_thread = nullptr;
 			std::for_each(m_records.begin()
 				, m_records.end()
-				, [](std::pair<const DataType, void*>& pr) {delete pr.second; }
-			);
+				, [](std::pair<const DataType, std::tuple<void*
+					, std::unique_ptr<std::function<void(void*)>>>>& pr)
+			{
+				auto& tp = pr.second;
+				void* pmap = std::get<0>(tp);
+				auto& uniqe_func = std::get<1>(tp);
+				if (uniqe_func && *uniqe_func)
+					(*uniqe_func)(pmap);
+			});
 		}
 		cache_mgr(const cache_mgr& that) = delete;
 		cache_mgr(cache_mgr&& that) = delete;
