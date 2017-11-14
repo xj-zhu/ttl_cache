@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <list>
 
 using namespace std::chrono;
 using namespace std::string_literals;
@@ -129,17 +130,41 @@ void testttlcache_1()//单条数据
 	//5.2) 获取不到对应的缓存了
 	ttl::cache<AccountInfo> s6;
 	bool ret6 = ttl::cache_mgr::Instance().GetCache(s6, DT_AccountInfo, "zxj"s, 100101);
-	//6. 使用和最开始调用不同的keys参数创建新缓存，会导致内存混乱，或致崩溃
+	//6. 使用和最开始调用不同的keys参数创建新缓存，创建失败（[会导致内存混乱，或致崩溃]问题已修复）
 	ttl::cache<AccountInfo> c4(new AccountInfo(100101, "zxj", "中国银行", 888888), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101,"中国银行"s);
 	ttl::cache<AccountInfo> s7;
 	bool ret7 = ttl::cache_mgr::Instance().GetCache(s7, DT_AccountInfo, "zxj"s, 100101, "中国银行"s);
 	//7. 等到缓存生命周期结束，则不能再获取到缓存数据【注意：具体能不能获取到和ttl::ttl_cache_mgr的缓存策略"ttl::ttl_cache_mgr::TtlStrategy"有关】
-	std::this_thread::sleep_for(std::chrono::seconds(10));
+// 	std::this_thread::sleep_for(std::chrono::seconds(10));
 	ttl::cache<AccountInfo> s8;
 	bool ret8 = ttl::cache_mgr::Instance().GetCache(s8, DT_AccountInfo, "lxy"s, 100102);
 }
 
-void testttlcache_2()
+void testttlcache_2()//单条数据
+{
+	//1.1) 增加一个生命周期10s的缓存数据,约定后两个参数表示取【持有人为"zxj"的账号为"100101"的账户】的缓存数据
+	ttl::cache<AccountInfo> c1(new AccountInfo(100101, "zxj", "中国银行", 666666), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s, 100101);
+	//1.2) 获取到前面加入的缓存数据，【注意：后两个参数类型(Keys)与增加缓存时对应】
+	ttl::cache<AccountInfo> s1;
+	bool ret1 = ttl::cache_mgr::Instance().GetCache(s1, DT_AccountInfo, "zxj"s, 100101);
+	//2 使用不同类型的Keys组合无法获取到缓存
+	ttl::cache<AccountInfo> s2;
+	bool ret2 = ttl::cache_mgr::Instance().GetCache(s2, DT_AccountInfo, "zxj"s);
+	//3 清空类型为“DT_AccountInfo”的全部缓存
+	bool ret3 = ttl::cache_mgr::Instance().ClrCache(DT_AccountInfo);
+	//4.1) 使用新的Keys组合【持有人为"zxj"的账户】标的缓存数据
+	ttl::cache<AccountInfo> c2(new AccountInfo(100101, "zxj", "中国银行", 999999), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s);
+	//4.2) 重新获取缓存数据，得到最新数据
+	ttl::cache<AccountInfo> s3;
+	bool ret4 = ttl::cache_mgr::Instance().GetCache(s3, DT_AccountInfo, "zxj"s);
+	//4.3) 更新缓存数据
+	ttl::cache<AccountInfo> c3(new AccountInfo(100102, "zxj", "建设银行", 987654), ttl::DS_SINGLE, DT_AccountInfo, 10000, "zxj"s);
+	//4.4) 重新获取缓存数据，得到最新数据
+	ttl::cache<AccountInfo> s4;
+	bool ret5 = ttl::cache_mgr::Instance().GetCache(s4, DT_AccountInfo, "zxj"s);
+}
+
+void testttlcache_3()
 {
 	//1. 没有缓存时获取失败
 	ttl::cache<std::list<AccountInfo>> s1;
@@ -171,7 +196,7 @@ void testttlcache_2()
 	bool ret4 = ttl::cache_mgr::Instance().GetCache(s4, DT_AccountList, "zxj"s);
 }
 
-void testttlcache_3()
+void testttlcache_4()
 {
 	//1. 没有缓存时获取失败
 	ttl::cache<TradeHistory> s1;
@@ -209,6 +234,7 @@ void test_ttlcache()
 	testttlcache_1();
 	testttlcache_2();
 	testttlcache_3();
+	testttlcache_4();
 }
 
 int main()

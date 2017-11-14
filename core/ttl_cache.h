@@ -7,7 +7,6 @@
 #include <condition_variable>
 #include <thread>
 #include <functional>
-#include <list>
 #include <map>
 #include <algorithm>
 #include <type_traits>
@@ -161,10 +160,19 @@ namespace ttl
 					void operator()(void* pmap)
 					{
 						CacheMap* ptypedmap = (CacheMap*)pmap;
-						delete ptypedmap;
+						if(ptypedmap)
+						{
+							for (auto it = ptypedmap->begin(); it != ptypedmap->end(); ++it)
+							{
+								caches_ref.erase(it->second.lock());
+							}
+							delete ptypedmap;
+						}
 					}
+					deleter(std::map<std::shared_ptr<cache_base>, time_t>& caches) : caches_ref(caches){}
+					std::map<std::shared_ptr<cache_base>, time_t>& caches_ref;
 				};
-				std::function<void(void*)> *func_deleter = new std::function<void(void*)>(deleter());
+				std::function<void(void*)> *func_deleter = new std::function<void(void*)>(deleter(m_caches));
 				struct checker
 				{
 					bool operator()(const std::type_info& info)
@@ -219,24 +227,35 @@ namespace ttl
 			auto it = m_records.find(edt);
 			if (it != m_records.end())
 			{
-				auto& tp = it->second;
-				CacheMap* pmap = (CacheMap*)(std::get<0>(tp));
-				auto& uniqe_func = std::get<2>(tp);
-				if (!(uniqe_func && (*uniqe_func) && (*uniqe_func)(typeid(CacheMap))))
-					return false;
-				if (pmap)
+				auto& tp1 = it->second;
+				void* pmapvoid = std::get<0>(tp1);
+				auto& uniqe_func_del = std::get<1>(tp1);
+				auto& uniqe_func_chk = std::get<2>(tp1);
+				if (pmapvoid)
 				{
-					auto tp = std::forward_as_tuple(std::forward<Keys>(keys)...);
-					auto itf = pmap->find(tp);
-					if (itf != pmap->end())
+					if (std::tuple_size<std::tuple<Keys...>>::value == 0)
 					{
-						m_caches.erase(itf->second.lock());
-						pmap->erase(itf);
-					}
-					if (pmap->empty())
-					{
-						delete pmap;
+						if (uniqe_func_del && *uniqe_func_del)
+							(*uniqe_func_del)(pmapvoid);
 						m_records.erase(edt);
+					}
+					else
+					{
+						if (!(uniqe_func_chk && (*uniqe_func_chk) && (*uniqe_func_chk)(typeid(CacheMap))))
+							return false;
+						auto tp2 = std::forward_as_tuple(std::forward<Keys>(keys)...);
+						CacheMap* pmap = (CacheMap*)pmapvoid;
+						auto itf = pmap->find(tp2);
+						if (itf != pmap->end())
+						{
+							m_caches.erase(itf->second.lock());
+							pmap->erase(itf);
+						}
+						if (pmap->empty())
+						{
+							delete pmap;
+							m_records.erase(edt);
+						}
 					}
 				}
 			}
