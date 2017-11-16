@@ -36,6 +36,43 @@ namespace ttl
 		{ };
 	}
 
+	namespace cont
+	{
+		template <size_t _Index, typename _Value, typename _Tuple>
+		class convert_map_helper : public convert_map_helper<_Index - 1, _Value, _Tuple>
+		{
+		public:
+			typedef convert_map_helper<_Index - 1, _Value, _Tuple> _BaseTy;
+			typedef std::map<std::tuple_element_t<std::tuple_size<_Tuple>::value - _Index, _Tuple>, typename _BaseTy::type> type;
+		};
+
+		template <typename _Value, typename _Tuple>
+		class convert_map_helper<1, _Value, _Tuple>
+		{
+		public:
+			typedef std::map<std::tuple_element_t<std::tuple_size<_Tuple>::value - 1, _Tuple>, _Value> type;
+		};
+
+		template <typename _Value, typename _Tuple>
+		class convert_map_helper<0, _Value, _Tuple>
+		{};
+
+		template<typename _Value, typename _Tuple>
+		using convert_map = typename convert_map_helper<std::tuple_size<_Tuple>::value, _Value, _Tuple>::type;
+
+
+		template <typename _Value, typename... _Keys>
+		class level_map_helper
+		{
+		public:
+			typedef std::tuple<std::remove_const_t<std::remove_reference_t<_Keys>>...> _Tuple;
+			typedef typename convert_map_helper<std::tuple_size<_Tuple>::value, _Value, _Tuple>::type type;
+		};
+
+		template<typename _Value, typename... _Keys>
+		using level_map = typename level_map_helper<_Value, _Keys...>::type;
+	}
+
 	using namespace std::chrono;
 
 	enum DataStoreType	//数据暂存方式
