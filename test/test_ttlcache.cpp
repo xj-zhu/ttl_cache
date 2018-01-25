@@ -135,7 +135,7 @@ void testttlcache_1()//单条数据
 	ttl::cache<AccountInfo> s7;
 	bool ret7 = ttl::cache_mgr::Instance().GetCache(s7, DT_AccountInfo, "zxj"s, 100101, "中国银行"s);
 	//7. 等到缓存生命周期结束，则不能再获取到缓存数据【注意：具体能不能获取到和ttl::ttl_cache_mgr的缓存策略"ttl::ttl_cache_mgr::TtlStrategy"有关】
-// 	std::this_thread::sleep_for(std::chrono::seconds(10));
+	std::this_thread::sleep_for(std::chrono::seconds(10));
 	ttl::cache<AccountInfo> s8;
 	bool ret8 = ttl::cache_mgr::Instance().GetCache(s8, DT_AccountInfo, "lxy"s, 100102);
 }

@@ -668,13 +668,14 @@ namespace ttl
 		DataType m_Edt = DT_Err;
 		time_t m_lifeMs = 60000;
 	};
-}
 
-template<class _Ty>
-void swap(ttl::cache<_Ty>& _Left,
-	ttl::cache<_Ty>& _Right) noexcept
-{	// swap _Left and _Right shared_ptrs
-	_Left.swap(_Right);
+	template<class _Ty>
+	void swap(ttl::cache<_Ty>& _Left,
+		ttl::cache<_Ty>& _Right) noexcept
+	{	// swap _Left and _Right shared_ptrs
+		_Left.swap(_Right);
+	}
+
 }
 
 #endif // _TTL_CACHE_H_
